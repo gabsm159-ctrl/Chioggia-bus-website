@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bus Chioggia - Consulta gli orari degli autobus urbani di Chioggia in tempo reale. Notifiche, mappa GPS, valutazioni e sincronizzazione cloud.">
+    <meta name="keywords" content="autobus, orari, Chioggia, trasporti, Arriva Veneto, GPS, notifiche">
+    <meta name="author" content="Bus Chioggia">
+    <meta name="theme-color" content="#0a7ea4">
+    <title>Bus Chioggia - Orari Autobus Urbani</title>
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230a7ea4' width='100' height='100'/><path fill='white' d='M30 30h40v10H30zm0 15h40v25H30zm5 30h30v5H35z'/></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0a7ea4;
+            --primary-light: #0a7ea420;
+            --secondary: #f59e0b;
+            --success: #22c55e;
+            --error: #ef4444;
+            --background: #ffffff;
+            --surface: #f5f5f5;
+            --foreground: #11181c;
+            --muted: #687076;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #0a5f7f 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        nav li {
+            margin: 0;
+        }
+
+        nav a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: var(--foreground);
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Main Content */
+        main {
+            padding: 3rem 1rem;
+        }
+
+        section {
+            margin-bottom: 4rem;
+        }
+
+        section h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        /* Lines Grid */
+        .lines-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .line-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .line-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .line-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .line-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .line-card p {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .feature p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        /* Search */
+        .search-container {
+            margin: 2rem 0;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .search-box button {
+            padding: 0.75rem 2rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .search-box button:hover {
+            background: #0a5f7f;
+        }
+
+        /* Alerts */
+        .alerts-section {
+            background: var(--secondary);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .alerts-section h3 {
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .alert-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid white;
+        }
+
+        .alert-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Download Section */
+        .download-section {
+            background: linear-gradient(135deg, var(--primary-light) 0%, rgba(10, 126, 164, 0.05) 100%);
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin: 3rem 0;
+        }
+
+        .download-section h2 {
+            border: none;
+            color: var(--primary);
+            margin-bottom: 2rem;
+        }
+
+        .download-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .download-method {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+        }
+
+        .download-method h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 1rem auto;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+        }
+
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 0.75rem 2rem;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #0a5f7f;
+        }
+
+        /* Responsive Table */
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .schedule-table th {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .schedule-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .schedule-table tr:hover {
+            background: var(--primary-light);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--foreground);
+            color: white;
+            padding: 3rem 1rem;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        footer p {
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+
+        .footer-links a {
+            color: #0a7ea4;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #f59e0b;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+            }
+
+            nav a {
+                padding: 0.75rem 1rem;
+            }
+
+            section h2 {
+                font-size: 1.5rem;
+            }
+
+            .lines-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .download-methods {
+                grid-template-columns: 1fr;
+            }
+
+            .schedule-table {
+                font-size: 0.9rem;
+            }
+
+            .schedule-table th,
+            .schedule-table td {
+                padding: 0.5rem;
+            }
+        }
+
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #151718;
+                --surface: #1e2022;
+                --foreground: #ecedee;
+                --border: #334155;
+                --muted: #9ba1a6;
+            }
+
+            body {
+                background-color: var(--background);
+            }
+
+            nav {
+                background: #1e2022;
+            }
+
+            .line-card,
+            .download-method,
+            .schedule-table {
+                background: var(--surface);
+                border-color: var(--border);
+            }
+
+            .feature {
+                background: var(--surface);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <h1>🚌 Bus Chioggia</h1>
+        <p>Consulta gli orari degli autobus urbani di Chioggia in tempo reale</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#linee">Linee</a></li>
+            <li><a href="#orari">Orari</a></li>
+            <li><a href="#funzionalita">Funzionalità</a></li>
+            <li><a href="#download">Download</a></li>
+            <li><a href="#contatti">Contatti</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Home Section -->
+        <section id="home">
+            <h2>Benvenuto</h2>
+            <p style="font-size: 1.1rem; color: var(--muted); margin-top: 1rem;">
+                Bus Chioggia è l'app ufficiale per consultare gli orari degli autobus urbani di Chioggia (30015). 
+                Con funzionalità avanzate come notifiche push, mappa GPS, tracking in tempo reale e sincronizzazione cloud, 
+                potrai organizzare i tuoi spostamenti in città in modo semplice e intuitivo.
+            </p>
+        </section>
+
+        <!-- Lines Section -->
+        <section id="linee">
+            <h2>Linee Urbane</h2>
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Cerca linea (es. 1, 2, 3...)">
+                    <button onclick="searchLines()">Cerca</button>
+                </div>
+            </div>
+            <div class="lines-grid" id="linesGrid">
+                <!-- Lines will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Alerts Section -->
+        <section id="alerts" style="display: none;">
+            <div class="alerts-section">
+                <h3>⚠️ Avvisi Importanti</h3>
+                <div id="alertsList">
+                    <!-- Alerts will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="funzionalita">
+            <h2>Funzionalità Principali</h2>
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">📱</div>
+                    <h3>Orari in Tempo Reale</h3>
+                    <p>Consulta gli orari aggiornati di tutte le 7 linee urbane di Chioggia</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔔</div>
+                    <h3>Notifiche Push</h3>
+                    <p>Ricevi promemoria personalizzabili prima della partenza dell'autobus</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🗺️</div>
+                    <h3>Mappa GPS</h3>
+                    <p>Visualizza la posizione delle fermate e il tracking in tempo reale</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⭐</div>
+                    <h3>Valutazioni</h3>
+                    <p>Lascia feedback e leggi le valutazioni di altri utenti</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">☁️</div>
+                    <h3>Sincronizzazione Cloud</h3>
+                    <p>I tuoi preferiti sincronizzati automaticamente tra dispositivi</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⚠️</div>
+                    <h3>Avvisi Scioperi</h3>
+                    <p>Ricevi notifiche su interruzioni, cantieri e cambiamenti di percorso</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Schedule Section -->
+        <section id="orari">
+            <h2>Esempio Orari - Linea 1</h2>
+            <p style="color: var(--muted); margin-bottom: 1rem;">
+                Di seguito un esempio degli orari della Linea 1. Scarica l'app per consultare gli orari completi di tutte le linee.
+            </p>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Fermata</th>
+                        <th>Lunedì - Sabato</th>
+                        <th>Domenica e Festivi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Piazza Vigo</strong></td>
+                        <td>06:30, 07:15, 08:00, 09:00, 10:00, 11:00, 12:00, 13:00, 14:00, 15:00, 16:00, 17:00, 18:00, 19:00, 20:00</td>
+                        <td>08:00, 09:30, 11:00, 12:30, 14:00, 15:30, 17:00, 18:30, 20:00</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Via Garibaldi</strong></td>
+                        <td>06:35, 07:20, 08:05, 09:05, 10:05, 11:05, 12:05, 13:05, 14:05, 15:05, 16:05, 17:05, 18:05, 19:05, 20:05</td>
+                        <td>08:05, 09:35, 11:05, 12:35, 14:05, 15:35, 17:05, 18:35, 20:05</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ponte Vigo</strong></td>
+                        <td>06:45, 07:30, 08:15, 09:15, 10:15, 11:15, 12:15, 13:15, 14:15, 15:15, 16:15, 17:15, 18:15, 19:15, 20:15</td>
+                        <td>08:15, 09:45, 11:15, 12:45, 14:15, 15:45, 17:15, 18:45, 20:15</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stazione</strong></td>
+                        <td>06:55, 07:40, 08:25, 09:25, 10:25, 11:25, 12:25, 13:25, 14:25, 15:25, 16:25, 17:25, 18:25, 19:25, 20:25</td>
+                        <td>08:25, 09:55, 11:25, 12:55, 14:25, 15:55, 17:25, 18:55, 20:25</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Download Section -->
+        <section id="download">
+            <div class="download-section">
+                <h2>Scarica l'App</h2>
+                <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 2rem;">
+                    Disponibile su iOS e Android tramite Expo Go
+                </p>
+                <div class="download-methods">
+                    <div class="download-method">
+                        <h3>📱 Scansiona il QR Code</h3>
+                        <p>Apri la fotocamera del tuo smartphone e inquadra il QR code</p>
+                        <div class="qr-code">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='white' width='200' height='200'/%3E%3Crect fill='black' x='20' y='20' width='50' height='50'/%3E%3Crect fill='black' x='130' y='20' width='50' height='50'/%3E%3Crect fill='black' x='20' y='130' width='50' height='50'/%3E%3C/svg%3E" alt="QR Code">
+                        </div>
+                        <a href="#" class="download-btn">Scarica QR</a>
+                    </div>
+                    <div class="download-method">
+                        <h3>🎯 Expo Go</h3>
+                        <p>Scarica Expo Go dall'App Store o Google Play Store</p>
+                        <p style="margin-top: 1rem; color: var(--muted); font-size: 0.9rem;">
+                            Poi scansiona il QR code con l'app
+                        </p>
+                        <a href="https://apps.apple.com/app/expo-go/id982107779" class="download-btn" target="_blank">App Store</a>
+                        <a href="https://play.google.com/store/apps/details?id=host.exp.exponent" class="download-btn" target="_blank" style="display: inline-block; margin-left: 0.5rem;">Google Play</a>
+                    </div>
+                    <div class="download-method">
+                        <h3>🌐 Web App</h3>
+                        <p>Accedi direttamente dal browser del tuo smartphone</p>
+                        <p style="margin-top: 1rem; color: var(--muted); font-size: 0.9rem;">
+                            Aggiungi alla home screen per un accesso rapido
+                        </p>
+                        <a href="#" class="download-btn">Apri Web App</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contatti">
+            <h2>Contatti e Supporto</h2>
+            <div style="background: var(--surface); padding: 2rem; border-radius: 12px; margin-top: 1.5rem;">
+                <h3 style="color: var(--primary); margin-bottom: 1rem;">Arriva Veneto</h3>
+                <p><strong>Servizio Urbano Chioggia</strong></p>
+                <p>📞 <a href="tel:+39041401111" style="color: var(--primary); text-decoration: none;">041 401111</a></p>
+                <p>🌐 <a href="https://www.arrivaveneto.it" target="_blank" style="color: var(--primary); text-decoration: none;">www.arrivaveneto.it</a></p>
+                <p style="margin-top: 1rem; color: var(--muted); font-size: 0.9rem;">
+                    Per informazioni sugli orari, abbonamenti e servizi speciali
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Bus Chioggia - Orari Autobus Urbani</p>
+        <div class="footer-links">
+            <a href="#home">Home</a>
+            <a href="#linee">Linee</a>
+            <a href="#funzionalita">Funzionalità</a>
+            <a href="#download">Download</a>
+            <a href="#contatti">Contatti</a>
+        </div>
+        <div class="footer-links" style="margin-top: 1.5rem;">
+            <a href="privacy-policy.html">Política de Privacidad</a>
+            <a href="terms-of-service.html">Términos de Servicio</a>
+        </div>
+        <p style="font-size: 0.9rem; margin-top: 1.5rem; opacity: 0.8;">
+            Dati forniti da Arriva Veneto | Ultimo aggiornamento: Settembre 2025
+        </p>
+    </footer>
+
+    <script>
+        // Bus lines data
+        const busLines = [
+            { id: 1, name: 'Linea 1', stops: 8, color: '#FF6B6B' },
+            { id: 2, name: 'Linea 2', stops: 7, color: '#FFD93D' },
+            { id: 3, name: 'Linea 3', stops: 6, color: '#1E3A8A' },
+            { id: 4, name: 'Linea 4', stops: 7, color: '#10B981' },
+            { id: 5, name: 'Linea 5', stops: 7, color: '#8B5CF6' },
+            { id: 6, name: 'Linea 6', stops: 8, color: '#06B6D4' },
+            { id: 7, name: 'Linea 7', stops: 9, color: '#EC4899' }
+        ];
+
+        // Render lines
+        function renderLines(lines = busLines) {
+            const grid = document.getElementById('linesGrid');
+            grid.innerHTML = lines.map(line => `
+                <div class="line-card" onclick="selectLine(${line.id})">
+                    <div class="line-number" style="background-color: ${line.color};">${line.id}</div>
+                    <h3>${line.name}</h3>
+                    <p>${line.stops} fermate</p>
+                </div>
+            `).join('');
+        }
+
+        // Search functionality
+        function searchLines() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = busLines.filter(line => 
+                line.name.toLowerCase().includes(query) || 
+                line.id.toString().includes(query)
+            );
+            renderLines(filtered);
+        }
+
+        // Select line
+        function selectLine(lineId) {
+            alert(`Hai selezionato la Linea ${lineId}. Scarica l'app per visualizzare gli orari completi!`);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderLines();
+            
+            // Smooth scroll for navigation
+            document.querySelectorAll('nav a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = document.querySelector(link.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        });
+
+        // Search on Enter
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        searchLines();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

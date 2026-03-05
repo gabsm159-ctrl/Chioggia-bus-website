@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /private/
+
+Sitemap: https://bus-chioggia.web.app/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
